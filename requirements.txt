@@ -58,7 +58,6 @@ python-dateutil
 python-dotenv
 python-jose
 python-multipart
-pywin32
 pyzmq
 requests
 rsa
