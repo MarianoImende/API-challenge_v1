@@ -104,7 +104,7 @@ def get_user_disable_current(user: User = Depends(get_user_current)):
         raise HTTPException(status_code=400, detail="Usuario inactivo")
     return user
 
-@app.post('/redlink/wallet/session')
+@app.post('/redlink/wallet/sesion')
 async def token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = autenticate_user(USERS_DB, form_data.username, form_data.password)
     print(user.username)
