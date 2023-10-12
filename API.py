@@ -105,9 +105,12 @@ def get_user_disable_current(user: User = Depends(get_user_current)):
     return user
 
 @app.post('/redlink/wallet/sesion')
-async def token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = autenticate_user(USERS_DB, form_data.username, form_data.password)
-    print(user.username)
+async def token(data: dict):
+    username = data.get("username")
+    password = data.get("password")
+    user = autenticate_user(USERS_DB, username,password)
+#     async def token(form_data: OAuth2PasswordRequestForm = Depends()):
+#     user = autenticate_user(USERS_DB, form_data.username, form_data.password)
     access_token_expires = timedelta(minutes=30)
     access_token_JWT = create_token({"sub": user.username}, access_token_expires)
     return {
