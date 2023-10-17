@@ -128,7 +128,7 @@ def documentacion_mov() -> Dict:
                 "description": "Error",
                 "content": {
                     "application/json": {
-                        "example": {"detail": "No se ha enviado los datos adecuados"}
+                        "example": {"detail": "Datos inválidos"}
                     }
                 }
             }
