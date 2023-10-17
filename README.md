@@ -27,7 +27,7 @@ La API realiza validaciones para asegurarse de que los datos proporcionados por 
 
 Los usuarios pueden consultar el saldo de sus cuentas y los últimos movimientos en sus cuentas a través de las rutas `/redlink/wallet/saldo` y `/redlink/wallet/ultmovimientos`.
 
-La API valida los números de cuenta para asegurarse de que sean cadenas de dígitos válidas y de que no estén vacíos ni sean nulos. Asimismo, se verifica que las fechas "fecha_desde" y "fecha_hasta" cumplan con un formato específico (por ejemplo, AAAAMMDD). Si no se cumplen estas condiciones, se generará una excepción HTTP con un código de estado 400 y un mensaje de "Datos inválidos".
+La API valida los números de cuenta para asegurarse de que sean cadenas de dígitos válidas y de que no estén vacíos ni sean nulos. Asimismo, se verifica que las fechas "fecha_desde" y "fecha_hasta" cumplan con un formato específico (por ejemplo, AAAAMMDD). Si no se cumplen estas condiciones, se generará una excepción HTTP con un código de estado 400 y un mensaje de "Datos inválidos".Además, siempre la fecha_desde debe ser menor a fecha_hasta.
 
 ### Cerrar Sesión:
 
