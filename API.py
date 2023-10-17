@@ -5,9 +5,8 @@ from genSaldo import generar_json_saldo
 from genTarjetas import generar_json_tarjetas
 from genCuentas import generar_json_cuentas
 from genUltMovimientos import generarFechas
-
 from fastapi import FastAPI, Request, Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import HTTPAuthorizationCredentials, OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBearer
 from pydantic import BaseModel
 from passlib.context import CryptContext
 import asyncio
@@ -20,6 +19,7 @@ oauth2_scheme = OAuth2PasswordBearer('/redlink/wallet/token')
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "01330dc7af5264e5ef8f880486dbe52045c0c5f2b060daa372783ff10bacb2d9" # Ideal es que este en una variable de entorno bien oculto (docker@LNKUSR2291:/mnt/c/Users/imendem$ openssl rand -hex 32)
 ALGORITHM = "HS256"
+auth_scheme = HTTPBearer()
 # Variable para realizar un seguimiento del número de solicitudes
 request_count = 0
 
@@ -98,6 +98,7 @@ def get_user_disable_current(user: User = Depends(get_user_current)):
         raise HTTPException(status_code=400, detail="Usuario inactivo")
     return user
 
+
 @app.post('/redlink/wallet/sesion', ** documentacion_sesion())
 async def token(data: JsonUserRequest):
 #async def token(data: dict, da: TokenRequest):
@@ -117,8 +118,10 @@ async def token(data: JsonUserRequest):
     json.update(generar_json_tarjetas())
     return json
 
+
+
 @app.post('/redlink/wallet/cuentas', **documentacion_cuentas())
-async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current)):
+async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     
     if not tarjeta.numero.isdigit() or not tarjeta.numero or not isinstance(tarjeta.numero, str):
        raise HTTPException(status_code=400, detail="El campo 'numero' es inválido.")
@@ -126,7 +129,7 @@ async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current
         return generar_json_cuentas()
 
 @app.post('/redlink/wallet/saldo')
-async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current)):
+async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     if not cuenta.numero.isdigit() or not cuenta.numero or not isinstance(cuenta.numero, str):
        raise HTTPException(status_code=400, detail="El campo 'numero' es inválido.")
     else:  
@@ -135,7 +138,7 @@ async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current)):
     return json_generado
 
 @app.post('/redlink/wallet/ultmovimientos', **documentacion_mov())
-async def ultmovimientos(data: Movimientos, fecha_desde: str, fecha_hasta: str, user: User = Depends(get_user_disable_current)):
+async def ultmovimientos(data: Movimientos, fecha_desde: str, fecha_hasta: str, user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
    
     if not data.numero_cuenta.isdigit() or not data.numero_cuenta:
         raise HTTPException(status_code=400, detail="Datos inválidos")
@@ -150,7 +153,7 @@ async def ultmovimientos(data: Movimientos, fecha_desde: str, fecha_hasta: str, 
     return generarFechas(fecha_desde,fecha_hasta)
 
 @app.post('/billetera/redlink/logout')
-async def logout(user: User = Depends(get_user_disable_current)):
+async def logout(user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     # Invalidar el token de acceso actual (esto es un ejemplo)
     user.disabled = True
     print(user)
@@ -158,6 +161,7 @@ async def logout(user: User = Depends(get_user_disable_current)):
     return {"message": "Has cerrado sesión exitosamente"}
     
 @app.post('/redlink/wallet/estado')
-async def estado(user: User = Depends(get_user_disable_current)):#str = Depends(oauth2_scheme) determina que la ruta es privada
+async def estado(user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):#str = Depends(oauth2_scheme) determina que la ruta es privada
     
     return user
+
