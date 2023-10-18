@@ -31,7 +31,7 @@ La API valida los números de cuenta para asegurarse de que sean cadenas de díg
 
 ### Cerrar Sesión:
 
-Los usuarios tienen la opción de cerrar sesión a través de la ruta `/billetera/redlink/logout`. Esta acción invalida su token de acceso y les impide acceder a las rutas protegidas.
+Los usuarios tienen la opción de cerrar sesión a través de la ruta `/billetera/redlink/logout`. Esta acción invalida su token de acceso y les impide acceder a las rutas protegidas.Si se intenta utilizar o reutilizar un token invalido se devuelve un error “HTTP 401 Token Invalido”. 
 
 ### Seguridad:
 
