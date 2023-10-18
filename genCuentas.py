@@ -8,7 +8,7 @@ def generar_json_cuentas():
 
     for _ in range(cantidad_cuentas):
         cuenta = {
-            "numero": ''.join(random.choices('0123456789', k=8)),  # Número de cuenta ficticio de 8 dígitos
+            "numero_cuenta": ''.join(random.choices('0123456789', k=8)),  # Número de cuenta ficticio de 8 dígitos
             "tipo": random.choice(tipos)  # Tipo de cuenta aleatorio
         }
         cuentas.append(cuenta)

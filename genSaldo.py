@@ -32,3 +32,4 @@ def generar_json_saldo():
 #     }
 
 #     return data  # Devuelve el JSON como cadena con formato
+

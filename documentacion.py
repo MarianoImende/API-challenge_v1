@@ -36,7 +36,7 @@ def documentacion_sesion() -> Dict:
 
 #--------------------------------------------------------------------------------
 class Tarjeta(BaseModel):
-    numero: str
+    numero_tarjeta: str
     
 def documentacion_cuentas() -> Dict:
 
@@ -51,7 +51,7 @@ def documentacion_cuentas() -> Dict:
                 "content": {
                     "application/json": {
                         #"example": {"access_token": "My token", "token_type": "My type"}
-                        "example": {"cuentas": [{"numero": "123456789", "tipo": "CA USD"}]}
+                        "example": {"cuentas": [{"numero_cuenta": "123456789", "tipo": "CA USD"}]}
                     }
                 }
             },
@@ -70,7 +70,7 @@ def documentacion_cuentas() -> Dict:
     
 #--------------------------------------------------------------------------------
 class Cuenta(BaseModel):
-    numero: str
+    numero_cuenta: str
     
 def documentacion_saldo() -> Dict:
 
@@ -92,7 +92,7 @@ def documentacion_saldo() -> Dict:
                 "description": "Error",
                 "content": {
                     "application/json": {
-                        "example": {"detail": "No se ha enviado el numero de cuenta"}
+                        "example": {"detail": "No se ha enviado el numero_tarjeta de cuenta"}
                     }
                 }
             }
@@ -119,7 +119,7 @@ def documentacion_mov() -> Dict:
                 "content": {
                     "application/json": {
                         
-                        "example": {"movimientos": [{"fecha": "20230131", "tipo": "Pago", "monto": "-853.99", "descripcion": "Retiro de cajero automático"}]}
+                        "example": {"movimientos": [{"fecha": "20230131", "monto": "-853.99", "descripcion": "Retiro de cajero automático"}]}
                        
                     }
                 }

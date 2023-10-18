@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import random
 from datetime import datetime, timedelta
 
+
 def generarFechas(fecha_desde, fecha_hasta):
     # Convertir las fechas de cadena a objetos datetime
     fecha_desde_dt = datetime.strptime(fecha_desde, "%Y%m%d")
@@ -33,7 +34,6 @@ def generarFechas(fecha_desde, fecha_hasta):
         # Crear un diccionario para el movimiento
         movimiento = {
             "fecha": fecha_formateada,
-            #"tipo": random.choice(["Depósito", "Retiro", "Transferencia", "Pago"]),
             "monto": monto,
             "descripcion": descripcion
         }

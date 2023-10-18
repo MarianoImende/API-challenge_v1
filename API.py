@@ -26,15 +26,21 @@ request_count = 0
 disabled_tokens = set()
 # Configura los datos del usuario para demostración (deberías obtener esto de una base de datos)
 USERS_DB = {
-    "Bhikkhu": {
-        "username": "Bhikkhu",
+    "challenge": {
+        "username": "challenge",
         "hashed_password": "$2b$12$nvhGUIUSyMuQO5ZldkXNXuydM0sFjLo6qiNgaOoXbnGj2e062aUFu", #Redlink*9
-        "email" : "eraclito@gmail.com",
+        "email" : "challenge@redlink.com.ar",
+        "disabled" : False,
+        
+    },
+    "prueba": {
+        "username": "prueba",
+        "hashed_password": "$2b$12$nvhGUIUSyMuQO5ZldkXNXuydM0sFjLo6qiNgaOoXbnGj2e062aUFu", #Redlink*9
+        "email" : "prueba@redlink.com.ar",
         "disabled" : False,
         
     }
 }
-
 
 #esquema para los usuarios generales
 class User(BaseModel):
@@ -126,33 +132,69 @@ async def token(data: JsonUserRequest):
             "access_token": access_token_JWT,
             "token_type": "bearer",
             "access_token_expires": access_token_expires}
-    json.update(generar_json_tarjetas())
+    if username == "challenge":
+        json.update({"tarjetas": [{"descripcion": "BANCO HIPOTECARIO", "numero": "825840853443"}, {"descripcion": "BANCO HSBC", "numero": "423455721156"}, {"descripcion": "BANCO DE LA PROVINCIA DE BUENOS AIRES", "numero": "595278769781"}]})
+    else:
+        json.update(generar_json_tarjetas())
+        
     return json
 
 @app.post('/redlink/wallet/cuentas', **documentacion_cuentas())
 async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-    print(token.credentials)
+    
     if not validate_token(token.credentials): #valido la deshabilitacion del token
            raise HTTPException(status_code=401, detail='Token inválido')
          
-    if not tarjeta.numero.isdigit() or not tarjeta.numero or not isinstance(tarjeta.numero, str):
-       raise HTTPException(status_code=400, detail="El campo 'numero' es inválido.")
-    else:  
+    if not tarjeta.numero_tarjeta.isdigit() or not tarjeta.numero_tarjeta or not isinstance(tarjeta.numero_tarjeta, str):
+       raise HTTPException(status_code=400, detail="El campo 'numero_tarjeta' es inválido.")
+    
+    
+    if user.username == "challenge":    
+      tarjetas_de_Bhikkhu = ["825840853443", "423455721156", "595278769781"]
+      
+      if tarjeta.numero_tarjeta == "825840853443":
+            return {"cuentas": [{"numero_cuenta": "99083422", "tipo": "CC $"}, {"numero_cuenta": "96703737", "tipo": "CC $"}, {"numero_cuenta": "93125576", "tipo": "CA USD"}]}
+      elif tarjeta.numero_tarjeta == "423455721156":
+            return {"cuentas": [{"numero_cuenta": "1209383422", "tipo": "CA $"}]}
+      elif tarjeta.numero_tarjeta == "595278769781":
+            return {"cuentas": [{"numero_cuenta": "34948473811", "tipo": "CC $"},{"numero_cuenta": "102033534534521", "tipo": "CA $"}]}
+    else:
         return generar_json_cuentas()
 
 @app.post('/redlink/wallet/saldo')
 async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-    if not cuenta.numero.isdigit() or not cuenta.numero or not isinstance(cuenta.numero, str):
+    
+    if not validate_token(token.credentials): #valido la deshabilitacion del token
+           raise HTTPException(status_code=401, detail='Token inválido')
+    
+    if not cuenta.numero_cuenta.isdigit() or not cuenta.numero_cuenta or not isinstance(cuenta.numero_cuenta, str):
        raise HTTPException(status_code=400, detail="El campo 'numero' es inválido.")
-    else:  
-       json_generado = generar_json_saldo()
-    #body = {"tarjetas":[{"numero":"125055111609","descripcion":"BANCO BICA"},{"numero":"736200459801","descripcion":"BANCO DE SALTA"},{"numero":"872000234502","descripcion":"BANCO LIBRE"}]}
-    return json_generado
-
+    
+    if user.username == "challenge":
+        if cuenta.numero_cuenta == "99083422":
+            return {"saldo": "$1.966,78"}
+        elif cuenta.numero_cuenta == "96703737":
+            return {"saldo": "$7.246,18"}
+        elif cuenta.numero_cuenta == "93125576":
+            return {"saldo": "USD109.940,00"}#-------------
+        elif cuenta.numero_cuenta == "1209383422":
+            return {"saldo": "$19.209,19"}
+        elif cuenta.numero_cuenta == "34948473811":
+            return {"saldo": "$0.000,00"}
+        elif cuenta.numero_cuenta == "102033534534521":
+            return {"saldo": "$150498.000,00"}
+    else:
+        json_generado = generar_json_saldo()
+        return json_generado
+    
+    
 @app.post('/redlink/wallet/ultmovimientos', **documentacion_mov())
-async def ultmovimientos(data: Movimientos, fecha_desde: str, fecha_hasta: str, user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+async def ultmovimientos(mov: Movimientos, fecha_desde: str, fecha_hasta: str, user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
    
-    if not data.numero_cuenta.isdigit() or not data.numero_cuenta:
+    if not validate_token(token.credentials): #valido la deshabilitacion del token
+           raise HTTPException(status_code=401, detail='Token inválido')
+       
+    if not mov.numero_cuenta.isdigit() or not mov.numero_cuenta:
         raise HTTPException(status_code=400, detail="Datos inválidos")
     
     if len(fecha_desde) != 8 or len(fecha_hasta) != 8:
@@ -161,14 +203,31 @@ async def ultmovimientos(data: Movimientos, fecha_desde: str, fecha_hasta: str, 
         datetime.strptime(fecha_desde, "%Y%m%d")
         datetime.strptime(fecha_hasta, "%Y%m%d")
     except ValueError:
-        raise HTTPException(status_code=400, detail="Datos inválidos")
-    return generarFechas(fecha_desde,fecha_hasta)
+            raise HTTPException(status_code=400, detail="Datos inválidos")
+    
+    if user.username == "challenge":
+        if mov.numero_cuenta == "99083422":
+            return {"movimientos": [{"fecha": "20230931", "monto": -2878.73, "descripcion": "Retiro de cajero automático"}, {"fecha": "20230831", "monto": -2382.16, "descripcion": "Compra"}, {"fecha": "20230131", "monto": -2818.21, "descripcion": "Retiro de cajero automático"},{"fecha": "20231201", "monto": -2818.21, "descripcion": "Retiro de cajero automático"},{"fecha": "20230131", "monto": -2818.21, "descripcion": "Retiro de cajero automático"}, {"fecha": "20230702", "monto": 3375.00, "descripcion": "Transferencia Credito"}, {"fecha": "20230131", "monto": -9009.80, "descripcion": "Compra"}]}
+        elif mov.numero_cuenta == "96703737":
+            return {"movimientos": [{"fecha": "20230123", "monto": 10828.00, "descripcion": "Plazo Fijo ingreso"},{"fecha": "20230831", "monto": -1182.17, "descripcion": "Compra"}, {"fecha": "20230131", "monto": -2382.16, "descripcion": "Compra"}, {"fecha": "20230131", "monto": -2818.21, "descripcion": "Retiro de cajero automático"}, {"fecha": "20230121", "monto": 2575.53, "descripcion": "Compra"}, {"fecha": "20230111", "monto": -9339.8, "descripcion": "Compra"}]}
+        elif mov.numero_cuenta == "93125576":
+            return {"movimientos": [{"fecha": "20231005", "monto": -118.00, "descripcion": "Retiro de cajero automático"},{"fecha": "20230114", "monto": -2808.10, "descripcion": "Ingreso en efectivo"}, {"fecha": "20231121", "monto": -1.16, "descripcion": "Ingreso en efectivo"}, {"fecha": "20230131", "monto": -2818.21, "descripcion": "Retiro de cajero automático"}, {"fecha": "20230131", "monto": 25575.43, "descripcion": "Depósito en efectivo"}, {"fecha": "20221028", "monto": -9339.00, "descripcion": "Pago de impuestos y servicio"}]}
+        elif mov.numero_cuenta == "1209383422":
+            return {"movimientos": [{"fecha": "20231205", "monto": 5578.00, "descripcion": "Plazo Fijo ingreso"},{"fecha": "20230114", "monto": -2808.10, "descripcion": "Ingreso en efectivo"}, {"fecha": "20231121", "monto": -1.16, "descripcion": "Ingreso en efectivo"}, {"fecha": "20230131", "monto": -2818.21, "descripcion": "Retiro de cajero automático"}, {"fecha": "20230131", "monto": 25575.43, "descripcion": "Depósito en efectivo"}, {"fecha": "20221028", "monto": -9339.00, "descripcion": "Pago de impuestos y servicio"}]}   
+        elif mov.numero_cuenta == "34948473811":
+            return {"movimientos": [{"fecha": "20231205", "monto": 78.00, "descripcion": "Plazo Fijo ingreso"},{"fecha": "20230114", "monto": -2808.10, "descripcion": "Ingreso en efectivo"}, {"fecha": "20231121", "monto": -1.16, "descripcion": "Ingreso en efectivo"}, {"fecha": "20230131", "monto": -28158.21, "descripcion": "Retiro de cajero automático"},{"fecha": "20230114", "monto": -28308.10, "descripcion": "Ingreso en efectivo"}, {"fecha": "20231121", "monto": -31.56, "descripcion": "Ingreso en efectivo"}, {"fecha": "20230131", "monto": -818.21, "descripcion": "Retiro de cajero automático"}, {"fecha": "20230131", "monto": 25075.40, "descripcion": "Depósito en efectivo"}, {"fecha": "20221028", "monto": -7399.00, "descripcion": "Pago de impuestos y servicio"}]}      
+        elif mov.numero_cuenta == "102033534534521":
+            return {"movimientos": [{"fecha": "20230123", "monto": 10828.00, "descripcion": "Plazo Fijo ingreso"},{"fecha": "20230831", "monto": -1182.17, "descripcion": "Compra"}, {"fecha": "20230131", "monto": -2382.16, "descripcion": "Compra"}, {"fecha": "20230131", "monto": -2818.21, "descripcion": "Retiro de cajero automático"}, {"fecha": "20230121", "monto": 2575.53, "descripcion": "Compra"}, {"fecha": "20230111", "monto": -9339.8, "descripcion": "Compra"}]}
+    else:    
+            return generarFechas(fecha_desde,fecha_hasta)
 
 @app.post('/billetera/redlink/logout')
-async def logout(user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-   
+async def logout(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+    
+    if not validate_token(token.credentials): #valido la deshabilitacion del token
+           raise HTTPException(status_code=401, detail='Token inválido')  
+       
     if token and token.scheme == "Bearer":
-        #print("MI TOKEN: " , token)
         # Utiliza token.credentials para acceder al token
         token_value = token.credentials
         # Inhabilita el token agregándolo a la lista de tokens inhabilitados
@@ -178,5 +237,6 @@ async def logout(user: User = Depends(get_user_disable_current),token: HTTPAutho
     
 @app.post('/redlink/wallet/estado')
 async def estado(user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):#str = Depends(oauth2_scheme) determina que la ruta es privada
-    
+    if not validate_token(token.credentials): #valido la deshabilitacion del token
+           raise HTTPException(status_code=401, detail='Token inválido')
     return user
