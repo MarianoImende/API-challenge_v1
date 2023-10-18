@@ -4,3 +4,4 @@ passlib
 pydantic
 python-jose
 typing-extensions
+babel
