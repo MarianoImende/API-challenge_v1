@@ -26,8 +26,8 @@ request_count = 0
 disabled_tokens = set()
 # Configura los datos del usuario para demostración (deberías obtener esto de una base de datos)
 USERS_DB = {
-    "eraclito": {
-        "username": "eraclito",
+    "Bhikkhu": {
+        "username": "Bhikkhu",
         "hashed_password": "$2b$12$nvhGUIUSyMuQO5ZldkXNXuydM0sFjLo6qiNgaOoXbnGj2e062aUFu", #Redlink*9
         "email" : "eraclito@gmail.com",
         "disabled" : False,
