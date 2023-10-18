@@ -5,7 +5,7 @@ from genSaldo import generar_json_saldo
 from genTarjetas import generar_json_tarjetas
 from genCuentas import generar_json_cuentas
 from genUltMovimientos import generarFechas
-from fastapi import FastAPI, Request, Depends, HTTPException
+from fastapi import FastAPI, Header, Request, Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBearer
 from pydantic import BaseModel
 from passlib.context import CryptContext
@@ -22,7 +22,8 @@ ALGORITHM = "HS256"
 auth_scheme = HTTPBearer()
 # Variable para realizar un seguimiento del número de solicitudes
 request_count = 0
-
+# Estructura para almacenar tokens inhabilitados (puede ser una lista, un conjunto, o una base de datos)
+disabled_tokens = set()
 # Configura los datos del usuario para demostración (deberías obtener esto de una base de datos)
 USERS_DB = {
     "eraclito": {
@@ -67,7 +68,6 @@ def autenticate_user(db,username,password):
     return user
 
 def create_token(data: dict, time_expire: Union[datetime, None] = None):
-    print(time_expire)
     data_copy = data.copy()
     if time_expire is None:
         expires = datetime.utcnow() + timedelta(minutes=15)#valor predeterminado
@@ -82,7 +82,6 @@ def get_user_current(token: str = Depends(oauth2_scheme)):
     try:
         token_decode = jwt.decode(token, key=SECRET_KEY, algorithms=[ALGORITHM])
         username = token_decode.get("sub")
-        print("get_user_current:" + username)
         if username is None:
              raise HTTPException(status_code=401, detail='No se pudo validar las credenciales', headers={"WWW-Authenticate": "Bearer"})
     except JWTError:
@@ -98,11 +97,23 @@ def get_user_disable_current(user: User = Depends(get_user_current)):
         raise HTTPException(status_code=400, detail="Usuario inactivo")
     return user
 
+# Middleware para validar el token en rutas protegidas
+def validate_token(token: str):
+    if token in disabled_tokens:
+        # El token se encuentra en la lista de tokens inhabilitados, se considera inválido
+        return False
+    try:
+        token_decode = jwt.decode(token, key=SECRET_KEY, algorithms=[ALGORITHM])
+        username = token_decode.get("sub")
+        if username is None:
+            return False
+    except JWTError:
+        return False
+    return True
 
 @app.post('/redlink/wallet/sesion', ** documentacion_sesion())
 async def token(data: JsonUserRequest):
 #async def token(data: dict, da: TokenRequest):
-    
     username = data.username # data.get("username")
     password = data.password #data.get("password")
     
@@ -118,11 +129,12 @@ async def token(data: JsonUserRequest):
     json.update(generar_json_tarjetas())
     return json
 
-
-
 @app.post('/redlink/wallet/cuentas', **documentacion_cuentas())
 async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-    
+    print(token.credentials)
+    if not validate_token(token.credentials): #valido la deshabilitacion del token
+           raise HTTPException(status_code=401, detail='Token inválido')
+         
     if not tarjeta.numero.isdigit() or not tarjeta.numero or not isinstance(tarjeta.numero, str):
        raise HTTPException(status_code=400, detail="El campo 'numero' es inválido.")
     else:  
@@ -154,14 +166,17 @@ async def ultmovimientos(data: Movimientos, fecha_desde: str, fecha_hasta: str, 
 
 @app.post('/billetera/redlink/logout')
 async def logout(user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
-    # Invalidar el token de acceso actual (esto es un ejemplo)
-    user.disabled = True
-    print(user)
-    # Devuelve un mensaje indicando que la sesión se ha cerrado exitosamente
-    return {"message": "Has cerrado sesión exitosamente"}
+   
+    if token and token.scheme == "Bearer":
+        #print("MI TOKEN: " , token)
+        # Utiliza token.credentials para acceder al token
+        token_value = token.credentials
+        # Inhabilita el token agregándolo a la lista de tokens inhabilitados
+        disabled_tokens.add(token_value)
+        # Devuelve un mensaje indicando que la sesión se ha cerrado exitosamente
+    return {" message": "Has cerrado sesión exitosamente"}
     
 @app.post('/redlink/wallet/estado')
 async def estado(user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):#str = Depends(oauth2_scheme) determina que la ruta es privada
     
     return user
-
