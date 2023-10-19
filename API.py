@@ -15,9 +15,9 @@ from jose import jwt, JWTError
 
 
 app = FastAPI()
-oauth2_scheme = OAuth2PasswordBearer('/redlink/wallet/token')
+oauth2_scheme = OAuth2PasswordBearer('/wallet/token')
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-SECRET_KEY = "01330dc7af5264e5ef8f880486dbe52045c0c5f2b060daa372783ff10bacb2d9" # Ideal es que este en una variable de entorno bien oculto (docker@LNKUSR2291:/mnt/c/Users/imendem$ openssl rand -hex 32)
+SECRET_KEY = "01330dc7af5264e5ef8f880486dbe52045c0c5f2b060daa372783ff10bacb2d9" # Ideal es que este en una variable de entorno bien oculto (openssl rand -hex 32)
 ALGORITHM = "HS256"
 auth_scheme = HTTPBearer()
 # Variable para realizar un seguimiento del número de solicitudes
@@ -28,15 +28,15 @@ disabled_tokens = set()
 USERS_DB = {
     "challenge": {
         "username": "challenge",
-        "hashed_password": "$2b$12$nvhGUIUSyMuQO5ZldkXNXuydM0sFjLo6qiNgaOoXbnGj2e062aUFu", #Redlink*9
-        "email" : "challenge@redlink.com.ar",
+        "hashed_password": "$2b$12$NLrNyrG528pi3U7f42FnJuxOV3pA61f5u.0bvkI/xoJ3cOAEmTLDG", #
+        "email" : "challenge@challenge.com.ar",
         "disabled" : False,
         
     },
     "prueba": {
         "username": "prueba",
-        "hashed_password": "$2b$12$nvhGUIUSyMuQO5ZldkXNXuydM0sFjLo6qiNgaOoXbnGj2e062aUFu", #Redlink*9
-        "email" : "prueba@redlink.com.ar",
+        "hashed_password": "$2b$12$NLrNyrG528pi3U7f42FnJuxOV3pA61f5u.0bvkI/xoJ3cOAEmTLDG", #
+        "email" : "prueba@challenge.com.ar",
         "disabled" : False,
         
     }
@@ -117,7 +117,7 @@ def validate_token(token: str):
         return False
     return True
 
-@app.post('/redlink/wallet/sesion', ** documentacion_sesion())
+@app.post('/wallet/sesion', ** documentacion_sesion())
 async def token(data: JsonUserRequest):
 #async def token(data: dict, da: TokenRequest):
     username = data.username # data.get("username")
@@ -139,7 +139,7 @@ async def token(data: JsonUserRequest):
         
     return json
 
-@app.post('/redlink/wallet/cuentas', **documentacion_cuentas())
+@app.post('/wallet/cuentas', **documentacion_cuentas())
 async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     
     if not validate_token(token.credentials): #valido la deshabilitacion del token
@@ -161,7 +161,7 @@ async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current
     else:
         return generar_json_cuentas()
 
-@app.post('/redlink/wallet/saldo')
+@app.post('/wallet/saldo')
 async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     
     if not validate_token(token.credentials): #valido la deshabilitacion del token
@@ -188,7 +188,7 @@ async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current),to
         return json_generado
     
     
-@app.post('/redlink/wallet/ultmovimientos', **documentacion_mov())
+@app.post('/wallet/ultmovimientos', **documentacion_mov())
 async def ultmovimientos(mov: Movimientos, fecha_desde: str, fecha_hasta: str, user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
    
     if not validate_token(token.credentials): #valido la deshabilitacion del token
@@ -221,7 +221,7 @@ async def ultmovimientos(mov: Movimientos, fecha_desde: str, fecha_hasta: str, u
     else:    
             return generarFechas(fecha_desde,fecha_hasta)
 
-@app.post('/billetera/redlink/logout')
+@app.post('/wallet/logout')
 async def logout(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     
     if not validate_token(token.credentials): #valido la deshabilitacion del token
@@ -235,7 +235,7 @@ async def logout(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
         # Devuelve un mensaje indicando que la sesión se ha cerrado exitosamente
     return {" message": "Has cerrado sesión exitosamente"}
     
-@app.post('/redlink/wallet/estado')
+@app.post('/wallet/estado')
 async def estado(user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):#str = Depends(oauth2_scheme) determina que la ruta es privada
     if not validate_token(token.credentials): #valido la deshabilitacion del token
            raise HTTPException(status_code=401, detail='Token inválido')
