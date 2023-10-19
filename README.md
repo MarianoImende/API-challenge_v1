@@ -14,6 +14,7 @@ La API admite la autenticación de usuarios mediante un mecanismo basado en toke
 - Contraseña: challenge
 
 Los usuarios pueden obtener un token de acceso a través de la ruta `/wallet/sesion`. Este token es necesario para acceder a las rutas protegidas. Las rutas protegidas requieren que los usuarios envíen su token de acceso para su validación. Si el token es válido y no ha expirado, se permite el acceso a la funcionalidad protegida. En caso contrario, la API devolverá un mensaje de error con un código de estado 401.
+Cabe mencionar que el recurso /wallet/sesión además del token y otros datos, también devuelve las tarjetas del usuario.
 
 ### Cuentas y Tarjetas
 
