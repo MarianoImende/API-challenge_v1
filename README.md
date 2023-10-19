@@ -39,7 +39,7 @@ La API se documenta de forma automática y se integra con Swagger OpenAPI para p
 
 ### Se Solicita
 
-a) Se solicita realizar las pruebas que se consideren necesarias para asegurar la calidad total de los recursos expuestos por la API. Las pruebas funcionales deben realizarse utilizando la herramienta Postman o similar con las correspondientes validaciones y uso adecuado de la herramienta.
+a) Se solicita realizar las pruebas que se consideren necesarias para asegurar la calidad total de los recursos expuestos por la API y de su documentacion (Swagger OpenAPI). Las pruebas funcionales deben realizarse utilizando la herramienta Postman o similar con las correspondientes validaciones y uso adecuado de la herramienta.
 
 b) A nivel de automatización de pruebas (Python), se solicita automatizar los recursos `/wallet/sesión` y `/wallet/ultmovimientos`. Para llevar adelante dicha tarea, es importante que las pruebas se realicen en lenguaje Python como base y debe contener su reporte correspondiente en formato HTML.
 
