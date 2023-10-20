@@ -232,7 +232,7 @@ async def logout(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
         # Devuelve un mensaje indicando que la sesión se ha cerrado exitosamente
     return {" message": "Has cerrado sesión exitosamente"}
     
-@app.post('/wallet/estado')
+@app.get('/wallet/estado')
 async def estado(user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):#str = Depends(oauth2_scheme) determina que la ruta es privada
     if not validate_token(token.credentials): #valido la deshabilitacion del token
            raise HTTPException(status_code=401, detail='Token inválido')
