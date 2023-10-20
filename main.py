@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from jose import jwt, JWTError
 
 app = FastAPI()
-oauth2_scheme = OAuth2PasswordBearer('/wallet/token')
+oauth2_scheme = OAuth2PasswordBearer('/wallet/sesion')
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "01330dc7af5264e5ef8f880486dbe52045c0c5f2b060daa372783ff10bacb2d9" # Ideal es que este en una variable de entorno bien oculto (openssl rand -hex 32)
 ALGORITHM = "HS256"
