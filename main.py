@@ -1,12 +1,11 @@
-from ast import Dict
 from typing import Union
 from documentacion import Cuenta, JsonUserRequest, Movimientos, Tarjeta, documentacion_cuentas, documentacion_mov, documentacion_sesion
 from genSaldo import generar_json_saldo
 from genTarjetas import generar_json_tarjetas
 from genCuentas import generar_json_cuentas
 from genUltMovimientos import generarFechas
-from fastapi import FastAPI, Header, Request, Depends, HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, OAuth2PasswordBearer, OAuth2PasswordRequestForm, HTTPBearer
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, OAuth2PasswordBearer, HTTPBearer
 from pydantic import BaseModel
 from passlib.context import CryptContext
 import asyncio
@@ -149,8 +148,7 @@ async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current
     
     
     if user.username == "challenge":    
-      tarjetas_de_Bhikkhu = ["825840853443", "423455721156", "595278769781"]
-      
+     
       if tarjeta.numero_tarjeta == "825840853443":
             return {"cuentas": [{"numero_cuenta": "99083422", "tipo": "CC $"}, {"numero_cuenta": "96703737", "tipo": "CC $"}, {"numero_cuenta": "93125576", "tipo": "CA USD"}]}
       elif tarjeta.numero_tarjeta == "423455721156":
