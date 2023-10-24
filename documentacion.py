@@ -62,6 +62,14 @@ def documentacion_cuentas() -> Dict:
                         "example": {"detail": "No se ha enviado el numero de tarjeta"}
                     }
                 }
+            },
+            401: {
+                "description": "Error",
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "No se pudo validar las credenciales"}
+                    }
+                }
             }
         }
     }
@@ -88,11 +96,19 @@ def documentacion_saldo() -> Dict:
                     }
                 }
             },
-            401: {
+            400: {
                 "description": "Error",
                 "content": {
                     "application/json": {
                         "example": {"detail": "No se ha enviado el numero_tarjeta de cuenta"}
+                    }
+                }
+            },
+            401: {
+                "description": "Error",
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "No se pudo validar las credenciales"}
                     }
                 }
             }
@@ -104,7 +120,6 @@ def documentacion_saldo() -> Dict:
 #--------------------------------------------------------------------------------
 class Movimientos(BaseModel):
     numero_cuenta: str
-
     
 def documentacion_mov() -> Dict:
 
@@ -124,11 +139,19 @@ def documentacion_mov() -> Dict:
                     }
                 }
             },
-            401: {
+            400: {
                 "description": "Error",
                 "content": {
                     "application/json": {
                         "example": {"detail": "Datos inválidos"}
+                    }
+                }
+            },
+            401: {
+                "description": "Error",
+                "content": {
+                    "application/json": {
+                        "example": {"detail": "No se pudo validar las credenciales"}
                     }
                 }
             }
