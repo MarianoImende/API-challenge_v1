@@ -1,14 +1,13 @@
 from typing import Union
-from documentacion import Cuenta, JsonUserRequest, Movimientos, Tarjeta, documentacion_cuentas, documentacion_mov, documentacion_sesion
+from documentacion import Cuenta, JsonUserRequest, Movimientos, Tarjeta, documentacion_cuentas, documentacion_estado, documentacion_loout, documentacion_mov, documentacion_saldo, documentacion_sesion
 from genSaldo import generar_json_saldo
 from genTarjetas import generar_json_tarjetas
 from genCuentas import generar_json_cuentas
 from genUltMovimientos import generarFechas
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.security import HTTPAuthorizationCredentials, OAuth2PasswordBearer, HTTPBearer
 from pydantic import BaseModel
 from passlib.context import CryptContext
-import asyncio
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from fastapi.openapi.utils import get_openapi
@@ -25,13 +24,21 @@ request_count = 0
 disabled_tokens = set()
 
 #--------------------------------------------------------------------------------------------------
+description = """
+La API de Wallet es un servicio que brinda a los usuarios la capacidad de gestionar 
+sus cuentas
+
+bancarias,realizar transacciones y acceder de forma segura a su información financiera.
+ 
+Esta API se ha diseñado con un enfoque en la seguridad y la eficiencia. 🚀
+"""
 def custom_openapi():
     if not app.openapi_schema:
         app.openapi_schema = get_openapi(
             title="API-challenge",#,app.title,
             version=app.version,
             openapi_version=app.openapi_version,
-            description="La API de Wallet es un servicio que brinda a los usuarios la capacidad de gestionar sus cuentas bancarias,realizar transacciones y acceder de forma segura a su información financiera. Esta API se ha diseñado con un enfoque en la seguridad y la eficiencia.",
+            description=description,
             terms_of_service=app.terms_of_service,
             contact=app.contact,
             license_info=app.license_info,
@@ -182,19 +189,19 @@ async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current
             return {"cuentas": [{"numero_cuenta": "1209383422", "tipo": "CA $"}]}
       elif tarjeta.numero_tarjeta == "595278769781":
             return {"cuentas": [{"numero_cuenta": "34948473811", "tipo": "CC $"},{"numero_cuenta": "102033534534521", "tipo": "CA $"}]}
-      #else:
-        # si sale por aui, devuelve null, es un error apropósito.
+      else:
+          raise HTTPException(status_code=400, detail="El campo 'numero_tarjeta' es inválido.")
     else:
      return generar_json_cuentas()
      
-@app.post('/wallet/saldo')
+@app.post('/wallet/saldo',**documentacion_saldo())
 async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     
     if not validate_token(token.credentials): #valido la deshabilitacion del token
            raise HTTPException(status_code=401, detail='Token inválido')
     
     if not cuenta.numero_cuenta.isdigit() or not cuenta.numero_cuenta or not isinstance(cuenta.numero_cuenta, str):
-       raise HTTPException(status_code=400, detail="El campo 'numero' es inválido.")
+       raise HTTPException(status_code=400, detail="El campo 'numero_cuenta' es inválido.")
     
     if user.username == "challenge":
         if cuenta.numero_cuenta == "99083422":
@@ -209,6 +216,8 @@ async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current),to
             return {"saldo": "$0.000,00"}
         elif cuenta.numero_cuenta == "102033534534521":
             return {"saldo": "$150498.000,00"}
+        # else: ESTA COMENTADO A PROPOSITO
+        #   raise HTTPException(status_code=400, detail="El campo 'numero_cuenta' es inválido.")
     else:
         json_generado = generar_json_saldo()
         return json_generado
@@ -244,10 +253,12 @@ async def ultmovimientos(mov: Movimientos, fecha_desde: str, fecha_hasta: str, u
             return {"movimientos": [{"fecha": "20231205", "monto": 78.00, "descripcion": "Plazo Fijo ingreso"},{"fecha": "20230114", "monto": -2808.10, "descripcion": "Ingreso en efectivo"}, {"fecha": "20231121", "monto": -1.16, "descripcion": "Ingreso en efectivo"}, {"fecha": "20230131", "monto": -28158.21, "descripcion": "Retiro de cajero automático"},{"fecha": "20230114", "monto": -28308.10, "descripcion": "Ingreso en efectivo"}, {"fecha": "20231121", "monto": -31.56, "descripcion": "Ingreso en efectivo"}, {"fecha": "20230131", "monto": -818.21, "descripcion": "Retiro de cajero automático"}, {"fecha": "20230131", "monto": 25075.40, "descripcion": "Depósito en efectivo"}, {"fecha": "20221028", "monto": -7399.00, "descripcion": "Pago de impuestos y servicio"}]}      
         elif mov.numero_cuenta == "102033534534521":
             return {"movimientos": [{"fecha": "20230123", "monto": 10828.00, "descripcion": "Plazo Fijo ingreso"},{"fecha": "20230831", "monto": -1182.17, "descripcion": "Compra"}, {"fecha": "20230131", "monto": -2382.16, "descripcion": "Compra"}, {"fecha": "20230131", "monto": -2818.21, "descripcion": "Retiro de cajero automático"}, {"fecha": "20230121", "monto": 2575.53, "descripcion": "Compra"}, {"fecha": "20230111", "monto": -9339.8, "descripcion": "Compra"}]}
+        else: 
+           raise HTTPException(status_code=400, detail="Datos inválidos")
     else:    
-            return generarFechas(fecha_desde,fecha_hasta)
+           return generarFechas(fecha_desde,fecha_hasta)
 
-@app.delete('/wallet/logout')
+@app.delete('/wallet/logout', **documentacion_loout())
 async def logout(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     
     if not validate_token(token.credentials): #valido la deshabilitacion del token
@@ -261,7 +272,7 @@ async def logout(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
         # Devuelve un mensaje indicando que la sesión se ha cerrado exitosamente
     return {" message": "Has cerrado sesión exitosamente"}
     
-@app.get('/wallet/estado')
+@app.get('/wallet/estado', **documentacion_estado())
 async def estado(user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):#str = Depends(oauth2_scheme) determina que la ruta es privada
     if not validate_token(token.credentials): #valido la deshabilitacion del token
            raise HTTPException(status_code=401, detail='Token inválido')
