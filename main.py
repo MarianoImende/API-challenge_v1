@@ -155,8 +155,10 @@ async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current
             return {"cuentas": [{"numero_cuenta": "1209383422", "tipo": "CA $"}]}
       elif tarjeta.numero_tarjeta == "595278769781":
             return {"cuentas": [{"numero_cuenta": "34948473811", "tipo": "CC $"},{"numero_cuenta": "102033534534521", "tipo": "CA $"}]}
+          #else:
+        # si sale por aui, devuelve null, es un error apropósito.
     else:
-        return generar_json_cuentas()
+     return generar_json_cuentas()
 
 @app.post('/wallet/saldo')
 async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
