@@ -11,6 +11,7 @@ from passlib.context import CryptContext
 import asyncio
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
+from fastapi.openapi.utils import get_openapi
 
 app = FastAPI()
 oauth2_scheme = OAuth2PasswordBearer('/wallet/sesion')
@@ -22,6 +23,32 @@ auth_scheme = HTTPBearer()
 request_count = 0
 # Estructura para almacenar tokens inhabilitados (puede ser una lista, un conjunto, o una base de datos)
 disabled_tokens = set()
+
+#--------------------------------------------------------------------------------------------------
+def custom_openapi():
+    if not app.openapi_schema:
+        app.openapi_schema = get_openapi(
+            title="API-challenge",#,app.title,
+            version=app.version,
+            openapi_version=app.openapi_version,
+            description="La API de Wallet es un servicio que brinda a los usuarios la capacidad de gestionar sus cuentas bancarias,realizar transacciones y acceder de forma segura a su información financiera. Esta API se ha diseñado con un enfoque en la seguridad y la eficiencia.",
+            terms_of_service=app.terms_of_service,
+            contact=app.contact,
+            license_info=app.license_info,
+            routes=app.routes,
+            tags=app.openapi_tags,
+            servers=app.servers,
+        )
+        for _, method_item in app.openapi_schema.get('paths').items():
+            for _, param in method_item.items():
+                responses = param.get('responses')
+                # remove 422 response, also can remove other status code
+                if '422' in responses:
+                    del responses['422']
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+#-----------------------------------------------------------------------------------------------------
 # Configura los datos del usuario para demostración (deberías obtener esto de una base de datos)
 USERS_DB = {
     "challenge": {
@@ -155,11 +182,11 @@ async def cuentas(tarjeta: Tarjeta,user: User = Depends(get_user_disable_current
             return {"cuentas": [{"numero_cuenta": "1209383422", "tipo": "CA $"}]}
       elif tarjeta.numero_tarjeta == "595278769781":
             return {"cuentas": [{"numero_cuenta": "34948473811", "tipo": "CC $"},{"numero_cuenta": "102033534534521", "tipo": "CA $"}]}
-          #else:
+      #else:
         # si sale por aui, devuelve null, es un error apropósito.
     else:
      return generar_json_cuentas()
-
+     
 @app.post('/wallet/saldo')
 async def saldo(cuenta: Cuenta,user: User = Depends(get_user_disable_current),token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     
@@ -220,7 +247,7 @@ async def ultmovimientos(mov: Movimientos, fecha_desde: str, fecha_hasta: str, u
     else:    
             return generarFechas(fecha_desde,fecha_hasta)
 
-@app.post('/wallet/logout')
+@app.delete('/wallet/logout')
 async def logout(token: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     
     if not validate_token(token.credentials): #valido la deshabilitacion del token
