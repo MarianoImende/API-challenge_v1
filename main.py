@@ -58,8 +58,8 @@ app.openapi = custom_openapi
 #-----------------------------------------------------------------------------------------------------
 # Configura los datos del usuario para demostración (deberías obtener esto de una base de datos)
 USERS_DB = {
-    "challenge_*1": {
-        "username": "challenge_*1",
+    "challenge": {
+        "username": "challenge",
         "hashed_password": "$2b$12$NLrNyrG528pi3U7f42FnJuxOV3pA61f5u.0bvkI/xoJ3cOAEmTLDG", #
         "email" : "challenge@challenge.com.ar",
         "disabled" : False,
