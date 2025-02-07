@@ -165,7 +165,7 @@ async def token(data: JsonUserRequest):
             "token_type": "bearer",
             "access_token_expires": access_token_expires}
     if username == "challenge":
-        json.update({"tarjetas": [{"descripcion": "BANCO HIPOTECARIO", "numero": "825840853443"}, {"descripcion": "BANCO HSBC", "numero": "423455721156"}, {"descripcion": "BANCO DE LA PROVINCIA DE BUENOS AIRES", "numero": "595278769781"}]})
+        json.update({"tarjetas": [{"descripcion": "NOVA TRUST BANK", "numero": "825840853443"}, {"descripcion": "TITANIUM FINANCE BANK", "numero": "423455721156"}, {"descripcion": "ASTRA CAPITAL BANK", "numero": "595278769781"}]})
     else:
         json.update(generar_json_tarjetas())
         
